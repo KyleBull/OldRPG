@@ -1,0 +1,16 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+public class ItemDatabase : MonoBehaviour {
+
+    public List<Item> items = new List<Item>();
+    // This is where items are held and made.
+    // Name,  ID of item, desc of item,  power, speed, type
+    // This is just a database of names.
+    void Start()
+    {
+      
+        items.Add(new Item("SkullShield", 0, "A strong shield that drains it user health",  10, 0, Item.ItemType.Equipable ));
+        items.Add(new Item("Grape", 1, "Its a grape.. eat it before it turns into a raisin", 0, 0, Item.ItemType.Consumable));
+    }
+}
