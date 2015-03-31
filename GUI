@@ -1,0 +1,26 @@
+using UnityEngine;
+using System.Collections;
+
+public class GuiBuilding : MonoBehaviour {
+    public Texture2D PowerIcon;
+    public Texture2D MoneyIcon;
+
+    public int powerValue;
+    public string powerString;
+    public int moneyValue;
+    public string moneyString;
+
+	// Use this for initialization
+    void Update()
+    {
+        string powerString = powerValue.ToString();
+        string moneyString = moneyValue.ToString();
+    }
+    void OnGUI()
+    {
+        GUI.Label(new Rect(Screen.width /4, 0,  300, 30), new GUIContent("Power: ", PowerIcon, powerString));
+        GUI.Label(new Rect(Screen.width /2, 0, 300, 30), new GUIContent("Money: ", MoneyIcon, moneyString));
+    }
+
+    
+}
