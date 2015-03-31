@@ -1,0 +1,202 @@
+// Draws and makes a simple GUI for inventory
+// Keeps track of what items player has
+
+
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+public class Inventory : MonoBehaviour
+{
+    // Testing moving these 3 lines
+    public GameObject Computer;
+    public GFGrid grid;
+    private Collider gridCollider;
+
+
+
+
+
+    public int slotsX;
+    public int slotsY;
+    public GUISkin inventorySkin;
+
+    public List<Item> inventory = new List<Item>();
+    public List<Item> slots = new List<Item>();
+    private ItemDatabase database;
+    public bool showInventory;
+    private bool showTooltip;
+    private string tooltip;
+
+
+    private bool draggingItem;
+    private Item draggedItem;
+    private int prevIndex;
+    // Use this for initialization
+    void Start()
+    {
+        for (int i = 0; i < (slotsX * slotsY); i++)
+        {
+            slots.Add(new Item());
+            inventory.Add(new Item());
+        }
+        database = GameObject.FindGameObjectWithTag("Item Database").GetComponent<ItemDatabase>();
+        AddItem(1);
+        AddItem(2);
+        AddItem(0);
+    }
+
+    void Update()
+    {
+        // Simple every time the inventory button is pushed this calls Inventory to be true or false
+        // This way if i change buttons or change systems it will still work. 
+        if (Input.GetButtonDown("Inventory"))
+        {
+            showInventory = !showInventory;
+        }
+    }
+    private Rect invWindow = new Rect(0, 0, 500, 500);
+    void OnGUI()
+    {
+        tooltip = "";
+
+        GUI.skin = inventorySkin;
+        if (showInventory)
+        {
+           invWindow = GUI.Window(0, invWindow, DrawInventory, "Inventory");
+          //  DrawInventory();
+            if (showTooltip)
+            {
+                GUI.Box(new Rect(Event.current.mousePosition.x + 15, Event.current.mousePosition.y + 10, 200, 200), tooltip, inventorySkin.GetStyle("TooltipSkin"));
+            }
+        }
+        if (draggingItem)
+        {
+            GUI.DrawTexture(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 50, 50), draggedItem.itemIcon);
+        }
+    }
+
+    
+
+    // Drawing my inventory. Its based on rows then coll 
+    // the slotrect is called each time a box is needed
+    // I made a gui skin to make this work. 
+    void DrawInventory(int windowID)
+    {
+        Event e = Event.current;
+        int i = 0;
+        for (int y = 0; y < slotsY; y++)
+        {
+            for (int x = 0; x < slotsX; x++)
+            {
+               
+                Rect slotRect = new Rect(x * 100, y * 100, 100, 100);
+                GUI.Box(slotRect, "", inventorySkin.GetStyle("Slot"));
+                slots[i] = inventory[i];
+                if (slots[i].itemName != null)
+                {
+                    GUI.DrawTexture(slotRect, slots[i].itemIcon);
+                    if (slotRect.Contains(e.mousePosition))
+                    {
+                        tooltip = CreateTooltip(slots[i]);
+                        showTooltip = true;
+                        if (e.button == 0 && e.type == EventType.mouseDrag && !draggingItem)
+                        {
+                            draggingItem = true;
+                            prevIndex = i;
+                            draggedItem = slots[i];
+                            inventory[i] = new Item();
+                        }
+
+                        // Dragging items around function
+                        if (e.type == EventType.mouseUp && draggingItem)
+                        {
+                            inventory[prevIndex] = inventory[i];
+                            inventory[i] = draggedItem;
+                            draggingItem = false;
+                            draggedItem = null;
+
+                           
+                        }
+                        // This is from your latest video
+                        	if (e.isMouse && e.type == EventType.mouseDown && e.button == 1)
+                            {
+                                if (inventory[i].itemType == Item.ItemType.Consumable)
+                                {
+                                    Debug.Log("First Object should be active");
+                                   // Instantiate(Computer, new Vector3(0,0,0), Quaternion.identity);
+                                    GameObject ComputerRoom = (GameObject)Instantiate(Computer);
+                                    Computer.transform.parent = GameObject.Find("Rectangular_Grid").transform;
+                                }
+                            }
+                        
+                    }
+                }
+                else
+                {
+                    if (slotRect.Contains(e.mousePosition))
+                    {
+                        if (e.type == EventType.mouseUp && draggingItem)
+                        {
+                            inventory[i] = draggedItem;
+                            draggingItem = false;
+                            draggedItem = null;
+                        }
+                    }
+                }
+                if (tooltip == "")
+                {
+                    showTooltip = false;
+                }
+                i++;
+            }
+           
+        }
+ GUI.DragWindow(new Rect(0, 0, 500, 10));
+    }
+
+
+    string CreateTooltip(Item item)
+    {
+        tooltip = "<color=#002952>" + item.itemName + "</color>\n\n" + "<color=#41A383>" + item.itemDesc + "</color>";
+        return tooltip;
+    }
+
+    //Removes item by deleting ID
+    void removeItem(int ID)
+    {
+        for (int i = 0; i < inventory.Count; i++)
+        {
+            if (inventory[i].itemID == ID)
+            {
+                inventory[i] = new Item();
+                break;
+            }
+        }
+    }
+    // This function is to add items into the loop. The first loop sees if it
+    // has a name if it does it keeps going. It if doesnt it voids the name out.
+    void AddItem(int ID)
+    {
+        for (int i = 0; i < inventory.Count; i++)
+        {
+            if (inventory[i].itemName == null)
+            {
+                for (int j = 0; j < database.items.Count; j++)
+                {
+                    if (database.items[j].itemID == ID)
+                    {
+                        inventory[i] = database.items[j];
+                    }
+                }
+                break;
+            }
+        }
+    }
+    // This check is good for quests or see if my thing is filled. 
+    bool InventoryContains(int id)
+    {
+        for (int i = 0; i < inventory.Count; i++)
+            if (inventory[i].itemID == id) return true;
+        return false;
+    }
+}
